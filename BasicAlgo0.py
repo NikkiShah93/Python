@@ -8,7 +8,8 @@ def find_target(file, target):
         return False
     else:
         n = len(file)//2
-        file.sort()
+        if sorted(file) != file:
+            file.sort()
         if file[n] == target:
             return True
         elif file[n] > target:
