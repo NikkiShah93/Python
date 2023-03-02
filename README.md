@@ -1,2 +1,4 @@
-# This repo contains some random python codes
+## This repo contains some simple python scripts that 
+
+### Each folder contains samples for each tasks
 
