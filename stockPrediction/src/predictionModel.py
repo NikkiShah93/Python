@@ -44,3 +44,29 @@ model.fit(train[predictors], train["Target"])
 predictions = model.predict(test[predictors])
 predictions = pd.Series(predictions, index= test.index)
 score = precision_score(test["Target"], predictions)
+print(score)
+
+## now for back testing
+## first, we need to create a prediction function
+
+def predict(train, test, predictors, model):
+    model.fit(train[predictors], train["Target"])
+    predictions = model.predict(test[predictors])
+    predictions = pd.Series(predictions, index = test.index, name = "Predictions")
+    score = precision_score(test["Target"], predictions)
+    combined = pd.concat([test['Target'], predictions], axis = 1)
+    return combined
+
+## then we need to write our back test function
+## the start is defined to process 10 years of data (10x250)
+## and step is defined to process one year at a time
+def backtest(data, model, predictors, start = 2500, step = 250):
+    ## we want to loop through our data 
+    ## and make predictions, year-by-year
+    all_predictions = []
+    for i in range(start,data.shape[0], step):
+        train = data.iloc[:i].copy()
+        test = data.iloc[i:i+step].copy()
+        predictions = predict(train, test, predictors, model)
+        all_predictions.append(predictions)
+    return pd.concat(all_predictions)
