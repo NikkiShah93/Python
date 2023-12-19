@@ -5,6 +5,8 @@ import yfinance as yf
 ## it helps to avoid over-fitting the model
 ## can indentify non-linear relationships
 from sklearn.ensemble import RandomForestClassifier
+## we also need the precision score for performance measures
+from sklearn.metrics import precision_score
 ## then we pass in a symbol for the stock we want to use
 ## this case Apple
 apple = yf.Ticker("AAPL")
@@ -32,3 +34,8 @@ model = RandomForestClassifier(n_estimators=100, min_samples_split=50, random_st
 ## to avoid the leakage 
 train = apple.iloc[:-100]
 test = apple.iloc[-100:]
+## then we need to specify our predictors 
+predictors = ["Close", "Volume", "High","Low"]
+## now we have to pass in the training set to the model
+model.fit(train[predictors], train["Target"])
+## and then measure the accuracy
