@@ -1,3 +1,4 @@
+import pandas as pd
 ## we'll use Yahoo Finance to get the data
 import yfinance as yf 
 ## we also need the sklearn for ML
@@ -38,4 +39,8 @@ test = apple.iloc[-100:]
 predictors = ["Close", "Volume", "High","Low"]
 ## now we have to pass in the training set to the model
 model.fit(train[predictors], train["Target"])
+## then test the model with testing set
 ## and then measure the accuracy
+predictions = model.predict(test[predictors])
+predictions = pd.Series(predictions, index= test.index)
+score = precision_score(test["Target"], predictions)
