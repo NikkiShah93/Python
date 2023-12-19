@@ -12,5 +12,7 @@ apple = apple.history(perid = "max")
 apple["tomorrow"] = apple["Open"].shift(-1)
 ## we also need to add a flag to see if it's up or down
 apple["target"] = (apple["Open"] < apple['tomorrow']).astype(int)
-
+## we need to get rid of the extra columns
+del apple["Dividends"]
+del apple["Stock Splits"]
 
