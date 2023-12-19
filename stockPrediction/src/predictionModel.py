@@ -70,3 +70,26 @@ def backtest(data, model, predictors, start = 2500, step = 250):
         predictions = predict(train, test, predictors, model)
         all_predictions.append(predictions)
     return pd.concat(all_predictions)
+## now let's test everything
+predictions = backtest(apple, model, predictors)
+score = precision_score(predictions["Target"], predictions["Predictions"])
+print(score)
+## we're not doing that well
+## and we need to add additional predictors into our model
+## starting with more rolling averages 
+## giving it more period breakdowns to compare the values
+## dod, wow, mom, etc.
+horizons = [2, 5, 30, 60, 90, 250, 500, 750, 1000]
+new_predictions = []
+## then we need to loop through
+## and calculate the average
+for h in horizons:
+    ## lets get the rolling average for that period
+    ## and then calculate the ratio
+    rolling_average = apple.rolling(h).mean()
+    ratio_column_name = f"Close_Ratio_{h}"
+    apple[ratio_column_name] = apple["Close"]/rolling_average["Close"]
+    ## lets also calculate the trend
+    trend_column_name = f"Trend_{h}"
+    apple[trend_column_name]
+    
