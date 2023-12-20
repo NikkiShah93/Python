@@ -80,7 +80,7 @@ print(score)
 ## giving it more period breakdowns to compare the values
 ## dod, wow, mom, etc.
 horizons = [2, 5, 30, 60, 90, 250, 500, 750, 1000]
-new_predictions = []
+new_predictors = []
 ## then we need to loop through
 ## and calculate the average
 for h in horizons:
@@ -90,6 +90,30 @@ for h in horizons:
     ratio_column_name = f"Close_Ratio_{h}"
     apple[ratio_column_name] = apple["Close"]/rolling_average["Close"]
     ## lets also calculate the trend
+    ## and get the sum of the days that the stock actually went up
     trend_column_name = f"Trend_{h}"
-    apple[trend_column_name]
-    
+    apple[trend_column_name] = apple.shift(1).rolling(h).sum()["Target"]
+    new_predictors.extend([ratio_column_name, trend_column_name])
+## now we have more columns in our df
+print(apple.head(10))
+## there are many missing values
+## so lets get rid of them
+apple.dropna(inplace=True)
+## now we need to re-create the model
+model = RandomForestClassifier(n_estimators = 250, min_samples_split = 125, random_state = 1)
+## and re-define the predict function
+def predict(train, test, predictors, model):
+    ## training the model the same as before
+    model.fit(train[predictors], train["Target"])
+    ## and this time, we want to get the probability
+    ## getting all the rows but only the second column
+    prediction = model.predict_proba(test[predictors])[:,1]
+    ## now we want to give a higher threshold
+    prediction[prediction >= 0.6] = 1
+    prediction[prediction < 0.6] = 0
+    prediction = pd.Series(prediction, index = test.index, name = "Predictions")
+    combined = pd.concat([test["Target"], prediction], axis = 1)
+    return combined
+predictions = backtest(apple, model, new_predictors)
+score = precision_score(test["Target"], prediction["Predictions"])
+print(score)
