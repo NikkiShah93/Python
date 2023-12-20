@@ -100,7 +100,7 @@ print(apple.head(10))
 ## so lets get rid of them
 apple.dropna(inplace=True)
 ## now we need to re-create the model
-model = RandomForestClassifier(n_estimators = 250, min_samples_split = 125, random_state = 1)
+model = RandomForestClassifier(n_estimators = 500, min_samples_split = 200, random_state = 1)
 ## and re-define the predict function
 def predict(train, test, predictors, model):
     ## training the model the same as before
@@ -115,5 +115,5 @@ def predict(train, test, predictors, model):
     combined = pd.concat([test["Target"], prediction], axis = 1)
     return combined
 predictions = backtest(apple, model, new_predictors)
-score = precision_score(test["Target"], prediction["Predictions"])
+score = precision_score(predictions["Target"], predictions["Predictions"])
 print(score)
