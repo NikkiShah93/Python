@@ -53,3 +53,9 @@ data['german_klass_vol'] = ((np.log(data['high'])-np.log(data['low']))**2)/2-(2*
 ## then for RSI we use the pandas_ta library
 ## we have to group the df by ticker and then apply the function
 data['rsi'] = data.groupby(level=1)['adj close'].transform(lambda x:pandas_ta.rsi(close=x, length = 20))
+## now for the Bollinger Bands
+## we will use pandas_ta
+## and get low, mid, and high values
+data['bb_low'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,0])
+data['bb_mid'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,1])
+data['bb_high'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,2])
