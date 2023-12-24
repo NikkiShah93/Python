@@ -59,3 +59,18 @@ data['rsi'] = data.groupby(level=1)['adj close'].transform(lambda x:pandas_ta.rs
 data['bb_low'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,0])
 data['bb_mid'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,1])
 data['bb_high'] = data.groupby(level=1)['adj close'].transform(lambda x: pandas_ta.bbands(close=np.log1p(x), length = 20).iloc[:,2])
+## for ATR
+## we need 3 columns, so we can't use transform and need to use apply
+## and we need to define a function to calculate the values
+def compute_atr(stock_data):
+    ## the atr fn takes 3 inputs
+    ## high, low, and close
+    atr = pandas_ta.atr(high = stock_data['high'],
+                   low = stock_data['low'],
+                   close = stock_data['close'],
+                   length = 14)
+    ## and we need to return a normalized df
+    ## so we sub mean and div by std
+    return atr.sub(atr.mean()).div(atr.std())
+## now we need to calculate the ATR
+data['atr'] = data.groupby(level=1, group_keys = False).apply(compute_atr)
