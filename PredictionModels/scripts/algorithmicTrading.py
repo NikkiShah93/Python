@@ -31,6 +31,25 @@ symbols_list = sp500['Symbol'].unique().tolist()
 end_date = '2023-12-20'
 start_date = pd.to_datetime(end_date) - pd.DateOffset(365*8)
 ## lets download the SP500 stock prices
+## we will use stack so it'd be easier to work with the df
 data = yf.download(tickers = symbols_list,
                   start = start_date,
-                  end = end_date)
+                  end = end_date).stack()
+## we then want to assign names to each index
+data.index.names = ['date', 'ticker']
+## makeing all the column names lower
+data.columns = data.columns.str.lower()
+## in the next step
+## we want to start calculating the features and indicators for each stock
+## 1. Garman-Klass Volatility
+## 2. RSI
+## 3. Bollinger Bands
+## 4. ATR
+## 5. MACD
+## 6. Dollar Volume
+
+## German-Klass gives a measure over volatility of an asset
+data['german_klass_vol'] = ((np.log(data['high'])-np.log(data['low']))**2)/2-(2*np.log(data['adj close'])-1)*(np.log(data['adj close'])-np.log(data['open']))**2
+## then for RSI we use the pandas_ta library
+## we have to group the df by ticker and then apply the function
+data['rsi'] = data.groupby(level=1)['adj close'].transform(lambda x:pandas_ta.rsi(close=x, length = 20))
