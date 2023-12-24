@@ -74,3 +74,14 @@ def compute_atr(stock_data):
     return atr.sub(atr.mean()).div(atr.std())
 ## now we need to calculate the ATR
 data['atr'] = data.groupby(level=1, group_keys = False).apply(compute_atr)
+## for MACD
+## we need to define our own duction 
+def compute_macd(close):
+    macd = pandas_ta.macd(close = close, length=20).iloc[:,0]
+    return macd.sub(macd.mean()).div(macd.std())
+data['macd'] = data.groupby(level=1, group_keys = False)['adj close'].apply(compute_macd)
+## for Dollar Volume
+## we have to divide by 1m 
+data['dollar_volume'] = (data['adj close']*data['volume'])/1e6
+
+
