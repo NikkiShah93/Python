@@ -185,3 +185,21 @@ def get_cluster(df):
     return df
 ## now we want to apply the clustering function
 clustered_data = monthly_data.dropna().groupby('date', group_keys = False).apply(get_cluster)
+## now we want to plot our clusters
+## for better understanding
+## we will define a function for that as well
+def plot_cluster(data):
+    ## separating the clusters
+    cluster_0 = data[data['cluster']==0]
+    cluster_1 = data[data['cluster']==1]
+    cluster_2 = data[data['cluster']==2]
+    cluster_3 = data[data['cluster']==3]
+    ## and then plotting scatter plots with them
+    ## we will use RSI here, because we didn't normalize that matric
+    plt.scatter(cluster_0.iloc[:,0],cluster_0.iloc[:,6], color = 'blue', label = 'Cluster 0')
+    plt.scatter(cluster_1.iloc[:,0],cluster_1.iloc[:,6], color = 'green', label = 'Cluster 1')
+    plt.scatter(cluster_2.iloc[:,0],cluster_2.iloc[:,6], color = 'black', label = 'Cluster 2')
+    plt.scatter(cluster_3.iloc[:,0],cluster_3.iloc[:,6], color = 'red', label = 'Cluster 3')
+    plt.legend()
+    plt.show()
+    return 0
