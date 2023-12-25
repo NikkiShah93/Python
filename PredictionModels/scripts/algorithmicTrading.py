@@ -133,5 +133,17 @@ valid_stocks = factor_data.groupby(level =1).size()[factor_data.groupby(level =1
 ## then using the valid stocks to filter out low data point tickers
 factor_data = factor_data[factor_data.index.get_level_values('ticker').isin(valid_stocks)]
 ## now we're ready to calculate rolling factor betas
-
+## using the RollingOLS from statmodels
+## giving the return of 1m as endog and the rest of the df as exog
+## with the window of 24 or the no of rows available for that ticker
+## and then dropping the constant column
+betas = factor_data.groupby(level=1, group_keys = False).apply(lambda x:RollingOLS(endog = x['return_1m'],
+                                                                          exog=sm.add_constant(x.drop('return_1m', axis=1)),
+                                                                          window = min(24, x.shape[0]),
+                                                                          min_nobs = len(x.columns)+1).fit(params_only=True).params.drop('const', axis=1))
+## we need to shift the betas for one month for each stock
+## because these are the values we have at the begining of the month
+## for instance, we will have the beta for Oct in Nov
+## so before joining them with our main df 
+## we need to fix that
 
