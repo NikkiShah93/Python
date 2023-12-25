@@ -146,4 +146,17 @@ betas = factor_data.groupby(level=1, group_keys = False).apply(lambda x:RollingO
 ## for instance, we will have the beta for Oct in Nov
 ## so before joining them with our main df 
 ## we need to fix that
+monthly_data = monthly_data.join(betas.groupby(level=1).shift())
+## we will have many missing values in the df
+## and want to replace them with the mean value 
+factors = ['Mkt-RF','SMB','HML','RMW','CMA']
+monthly_data.loc[:, factors] = monthly_data.groupby(level=1, group_keys = False)[factors].apply(lambda x:x.fillna(x.mean()))
+## we no longer need the adj close at this point
+monthly_data.drop('adj close',axis=1, inplace = True)
+## now we're ready to apply ML to our df
+## we have 18 main features
+## and want to decide at each month
+## which stocks do we want to keep in our portfolio
+## we could decide which stocks to long or to short
+## and the volume in the portfolio
 
