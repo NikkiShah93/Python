@@ -94,7 +94,7 @@ last_cols = [c for c in data.columns if c not in skip_list]
 monthly_data = pd.concat([data.unstack('ticker')[last_cols].resample('M').last().stack('ticker'),
            data.unstack('ticker')['dollar_volume'].resample('M').mean().stack('ticker').to_frame('dollar_volume')], axis = 1).dropna()
 ## now we want to calculate 5-year rolling average of dollar volume
-monthly_data['dollar_volume_5_yr'] = monthly_data.unstack('ticker')['dollar_volume'].rolling(5*12).mean().stack('ticker')
+monthly_data['dollar_volume_5_yr'] = monthly_data.loc[:,'dollar_volume'].unstack('ticker').rolling(5*12, min_periods = 12).mean().stack('ticker')
 ## then we want to rank the stock using the new metric
 monthly_data['dollar_volume_ranking'] = monthly_data.groupby(level=0)['dollar_volume_5_yr'].rank(ascending = False)
 ## and only get the top 150 stockes
@@ -119,7 +119,19 @@ monthly_data = monthly_data.groupby(level=1, group_keys = False).apply(calculate
 factor_data = web.DataReader('F-F_Research_Data_5_Factors_2x3',
               'famafrench',
               start = '2010')[0].drop('RF', axis = 1)
-
-
+## need to fix the index first
+factor_data.index = factor_data.index.to_timestamp()
+## and then fix the date to be the end of the month
+## and getting the actual values instead of %
+factor_data = factor_data.resample('M').last().div(100)
+factor_data.index.name = 'date'
+## now we need to join our factors with the 
+## return_1m
+factor_data = factor_data.join(monthly_data['return_1m']).sort_index()
+## we want to remove the stocks with less than 10 months of data
+valid_stocks = factor_data.groupby(level =1).size()[factor_data.groupby(level =1).size() >=10].index
+## then using the valid stocks to filter out low data point tickers
+factor_data = factor_data[factor_data.index.get_level_values('ticker').isin(valid_stocks)]
+## now we're ready to calculate rolling factor betas
 
 
