@@ -98,4 +98,28 @@ monthly_data['dollar_volume_5_yr'] = monthly_data.unstack('ticker')['dollar_volu
 ## then we want to rank the stock using the new metric
 monthly_data['dollar_volume_ranking'] = monthly_data.groupby(level=0)['dollar_volume_5_yr'].rank(ascending = False)
 ## and only get the top 150 stockes
-monthly_data = monthly_data[monthly_data['dollar_volume_ranking']<=150]
+monthly_data = monthly_data[monthly_data['dollar_volume_ranking']<=150].drop(['dollar_volume_ranking', 'dollar_volume_5_yr','dollar_volume'], axis=1)
+## now the next step is to calculate the monthly returns for different periods
+## we need to define our own function
+def calculate_return(df):
+    lags = [1,2,3,6,9,12]
+    outlier_cutoff = 0.005
+    for lag in lags:
+        df[f'return_{lag}m'] = df['adj close'].pct_change(lag).pipe(lambda x:x.clip(lower = x.quantile(outlier_cutoff),upper = x.quantile(1-outlier_cutoff))).add(1).pow(1/lag).sub(1)
+    return df
+monthly_data = monthly_data.groupby(level=1, group_keys = False).apply(calculate_return).dropna()
+
+## now we need to download Fama-French Factors
+## and calculate rolling factor betas
+## this step is used to estimate the exposure of assets
+## to the common risk factors using linear regression
+## the five factors are market risk, size, value, operating profitability, annd investment
+## we will use the pandas_datareader library for this
+## and get the monthly level data 
+factor_data = web.DataReader('F-F_Research_Data_5_Factors_2x3',
+              'famafrench',
+              start = '2010')[0].drop('RF', axis = 1)
+
+
+
+
