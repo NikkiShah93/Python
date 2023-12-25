@@ -263,3 +263,47 @@ stocks_dict = {}
 for month in months:
     ## changing the ts to dt
     stocks_dict[month.strftime('%Y-%m-%d')] = filtered_data.xs(month).index.unique().tolist()
+## the next step is to define the optimization function
+## we will define a weight optimizer function 
+## that'll be using PyPortfolioOpt and EfficientFrontier
+## to optimize for weights
+## we need to use the last year's prices 
+## apply the single stock weight bounds constraint for diversification
+## with min as half equaly weighed and max as 10% portfolio
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import risk_models
+from pypfopt import expected_returns
+## and then create the func
+def optimize_weight(prices, lower_bound = 0):
+    ## for calculating the returns
+    ## we will use the expected returns
+    ## and use the prices and 252 as freq 
+    ## which is the # of date to trade in a year
+    returns = expected_returns(prices = prices,
+                              frequency = 252)
+    ## and for our covariance
+    ## we will use the risk models
+    ## and supply the same vals
+    cov = risk_models(prices = prices,
+                     frequency = 252)
+    ## and then we have to create the EF model
+    ## and input the created vals in the prior step
+    ## + the weight bounds and the solver
+    ef = EfficientFrontier(expected_returns=returns,
+                          cov_matrix=cov,
+                          weight_bounds=(lower_bound,.1),
+                          solver='SCS')
+    ## for weights
+    ## we will use max sharpe from EF
+    weights = ef.max_sharpe()
+    return ef.clean_weights()
+## we need at least one year prior to the current df
+## so we should download a new set of data
+## with that start date
+## we want to only get the stocks info 
+## for the ones that we have in our current set
+start_date = monthly_data.index.get_level_values('date').unique()[0]-pd.DateOffset(365)
+end_date = monthly_data.index.get_level_values('date').unique()[-1]
+
+stocks = monthly_data.index.get_level_values('ticker').unique().tolist()
+fresh_data = yf.download(tickers = stocks, start = start_date, end = end_date).stack()
