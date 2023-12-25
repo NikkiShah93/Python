@@ -92,7 +92,10 @@ data['dollar_volume'] = (data['adj close']*data['volume'])/1e6
 skip_list = ['dollar_volume', 'volume', 'open','high','low', 'close']
 last_cols = [c for c in data.columns if c not in skip_list]
 monthly_data = pd.concat([data.unstack('ticker')[last_cols].resample('M').last().stack('ticker'),
-           data.unstack('ticker')['dollar_volume'].resample('M').mean().stack('ticker').to_frame('dollar_volume')], 
-          axis = 1)
-
-
+           data.unstack('ticker')['dollar_volume'].resample('M').mean().stack('ticker').to_frame('dollar_volume')], axis = 1).dropna()
+## now we want to calculate 5-year rolling average of dollar volume
+monthly_data['dollar_volume_5_yr'] = monthly_data.unstack('ticker')['dollar_volume'].rolling(5*12).mean().stack('ticker')
+## then we want to rank the stock using the new metric
+monthly_data['dollar_volume_ranking'] = monthly_data.groupby(level=0)['dollar_volume_5_yr'].rank(ascending = False)
+## and only get the top 150 stockes
+monthly_data = monthly_data[monthly_data['dollar_volume_ranking']<=150]
