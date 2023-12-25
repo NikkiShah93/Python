@@ -238,3 +238,28 @@ for i in clustered_data.index.get_level_values('date').unique().tolist():
 ## now we know if the stocks with high RSI are in cluster 3
 ## we want our porfolio to be stocks that are in that cluster
 ## for the previous perids
+## now for the next step
+## we want to for each month
+## select assets based on the cluster
+## and form a portfolio based on the Efficient Frontier max sharpe ratio optimization
+## first we only get the stocks that are in a given cluster
+## and if the momentum is persistent
+## then those stocks should continue to outperform 
+## in the following month
+## we will pick cluster 3, 
+## which seems to be having the stocks that we're interested
+filtered_data = clustered_data[clustered_data['cluster'] ==3].copy()
+## and then reset the index to have the tickers in the columns
+filtered_data = filtered_data.reset_index(level = 1)
+## then assign the 1st day of the next month,
+## to the previous month clusters
+filtered_data.index = filtered_data.index+pd.DateOffset(1)
+filtered_data = filtered_data.reset_index().set_index(['date', 'ticker'])
+## and now we want to create a dictionary
+## that as the month as the key
+## and the stocks as a list of vals for that key
+months = filtered_data.index.get_level_values('date').unique().tolist()
+stocks_dict = {}
+for month in months:
+    ## changing the ts to dt
+    stocks_dict[month.strftime('%Y-%m-%d')] = filtered_data.xs(month).index.unique().tolist()
