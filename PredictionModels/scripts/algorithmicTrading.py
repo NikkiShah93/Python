@@ -83,5 +83,16 @@ data['macd'] = data.groupby(level=1, group_keys = False)['adj close'].apply(comp
 ## for Dollar Volume
 ## we have to divide by 1m 
 data['dollar_volume'] = (data['adj close']*data['volume'])/1e6
+## now for the next step
+## we want to aggregate to monthly level
+## and then get the top 150 most liquid stock for each month
+## to reduce the training time and experiment w featurs & stategies
+## for the dollar volume, we only need to get the monthly mean for each stock
+## list of columns we want to operate on 
+skip_list = ['dollar_volume', 'volume', 'open','high','low', 'close']
+last_cols = [c for c in data.columns if c not in skip_list]
+monthly_data = pd.concat([data.unstack('ticker')[last_cols].resample('M').last().stack('ticker'),
+           data.unstack('ticker')['dollar_volume'].resample('M').mean().stack('ticker').to_frame('dollar_volume')], 
+          axis = 1)
 
 
