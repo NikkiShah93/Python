@@ -159,4 +159,29 @@ monthly_data.drop('adj close',axis=1, inplace = True)
 ## which stocks do we want to keep in our portfolio
 ## we could decide which stocks to long or to short
 ## and the volume in the portfolio
-
+## at this point
+## we have to decide on the ML and approach to use
+## we want to use a supervised algorithm
+## that can group these stocks
+## and that's why we picked the k-means clustering method
+## to group the stocks based on their features
+## you can have pre-defined centroids for each cluster after doing some research
+## lets start with k-means++ initialization and take it from there
+## we have to specify how many clusters we want
+## we can start with low numbers and take it from there
+## to get the optimum number
+## for this data, 4 seems to be a good number of clusters
+from sklearn.cluster import KMeans
+## we want to define a function
+## that can assign clusters
+def get_cluster(df):
+    ## it'll create a KMeans model
+    ## asking for 4 clusters
+    ## making sure the result is re-creatable
+    ## and telling it to use random initialization for our 1st model
+    df['cluster'] = KMeans(n_clusters = 4,
+                          random_state = 0,
+                          init='random').fit(df).labels_
+    return df
+## now we want to apply the clustering function
+clustered_data = monthly_data.dropna().groupby('date', group_keys = False).apply(get_cluster)
