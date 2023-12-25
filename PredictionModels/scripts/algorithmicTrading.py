@@ -189,6 +189,7 @@ clustered_data = monthly_data.dropna().groupby('date', group_keys = False).apply
 ## for better understanding
 ## we will define a function for that as well
 def plot_cluster(data):
+    plt.style.use('ggplot')
     ## separating the clusters
     cluster_0 = data[data['cluster']==0]
     cluster_1 = data[data['cluster']==1]
@@ -203,3 +204,37 @@ def plot_cluster(data):
     plt.legend()
     plt.show()
     return 0
+## we want to plot for each month
+for i in clustered_data.index.get_level_values('date').unique().tolist():
+    g = clustered_data.xs(i)
+    plt.title(f'Date {i}')
+    plot_cluster(g)
+## if we look at the plots, 
+## we will notice that the clusters are assigned randomly
+## and we want to change that
+## the strategy would be to follow stock momentum
+## in order to do that, we have to specify the centroids for our model
+## and we'll be using the RSI values
+target_rsi_values = [30, 45, 55, 70]
+## we want the number of clusters, and number of features
+initial_centroids = np.zeros((len(target_rsi_values), 18))
+## and then use the target values in the RSI column of the array
+initial_centroids[:,6] = target_rsi_values
+## and use this centroid in our KMeans model
+## create a new function (or modify the old one)
+## to use the defined initial centroid
+def get_cluster_with_init(df):
+    df['cluster'] = KMeans(n_clusters = 4,
+                          random_state = 0,
+                          init=initial_centroids).fit(df).labels_
+    return df
+## and just apply the new function to the set
+clustered_data = monthly_data.dropna().groupby('date', group_keys = False).apply(get_cluster_with_init)
+## and then plot the new clusters
+for i in clustered_data.index.get_level_values('date').unique().tolist():
+    g = clustered_data.xs(i)
+    plt.title(f'Date {i}')
+    plot_cluster(g)
+## now we know if the stocks with high RSI are in cluster 3
+## we want our porfolio to be stocks that are in that cluster
+## for the previous perids
