@@ -279,12 +279,12 @@ def optimize_weight(prices, lower_bound = 0):
     ## we will use the expected returns
     ## and use the prices and 252 as freq 
     ## which is the # of date to trade in a year
-    returns = expected_returns(prices = prices,
+    returns = expected_returns.mean_historical_return(prices = prices,
                               frequency = 252)
     ## and for our covariance
     ## we will use the risk models
     ## and supply the same vals
-    cov = risk_models(prices = prices,
+    cov = risk_models.sample_cov(prices = prices,
                      frequency = 252)
     ## and then we have to create the EF model
     ## and input the created vals in the prior step
@@ -302,8 +302,65 @@ def optimize_weight(prices, lower_bound = 0):
 ## with that start date
 ## we want to only get the stocks info 
 ## for the ones that we have in our current set
-start_date = monthly_data.index.get_level_values('date').unique()[0]-pd.DateOffset(365)
+start_date = monthly_data.index.get_level_values('date').unique()[0]-pd.DateOffset(months=12)
 end_date = monthly_data.index.get_level_values('date').unique()[-1]
 
 stocks = monthly_data.index.get_level_values('ticker').unique().tolist()
-fresh_data = yf.download(tickers = stocks, start = start_date, end = end_date).stack()
+fresh_data = yf.download(tickers = stocks, start = start_date, end = end_date)
+## the next step will be
+## to calculate the daily returns
+## for each stock that could land in our pf
+## and then loop over each month
+## select the stocks, and calculate the weight
+## for the next month
+## and if the maximum sharpe fails for a month
+## then we will use the equally-weighed weights
+## and then calculate the daily returns
+returns_df = np.log(fresh_data['Adj Close']).diff()
+portfolio_df = pd.DataFrame()
+## loop through the dictionary
+for start_date in stocks_dict:
+    try:
+        ## end date will be the end of the current month
+        end_date = (pd.to_datetime(start_date)+pd.offsets.MonthEnd(0)).strftime('%Y-%m-%d')
+        ## and then we need to get the sctocks for that date
+        stocks_to_use = stocks_dict[start_date]
+        ## now we have to use our optimizer
+        ## to calculate the weights
+        optimization_start_date = (pd.to_datetime(start_date)-pd.DateOffset(months = 12)).strftime('%Y-%m-%d')
+        optimization_end_date = (pd.to_datetime(start_date)-pd.DateOffset(days = 1)).strftime('%Y-%m-%d')
+        ## and then create our optimization df
+        optimization_df = fresh_data[optimization_start_date:optimization_end_date]['Adj Close'][stocks_to_use]
+        ## supply the half of the equaly weighed stocks as lower bound
+        lower_bound = round((1/len(stocks_to_use)*.5),3)
+        ## for catching the cases that 
+        ## max sharpe won't work
+        ## we will just use the equal weights
+        try:
+            weights = optimize_weight(optimization_df,lower_bound=lower_bound)
+            ## and then convert the weights to df
+            ## so it'll be easy to merge with the returns df
+            weights = pd.DataFrame(weights, index=pd.Series(0))
+        except:
+            print(f'Max Sharpe failed for {start_date}, replacing with equal weights')
+            weights = pd.DataFrame({col:1/len(stocks_to_use) for col in stocks_to_use}, index = pd.Series(0))
+        ## current month returns
+        current_returns = returns_df[start_date:end_date]
+        ## then we have to merge it with our weights 
+        ## using the stocks ticker
+        current_returns = current_returns.stack().to_frame('returns').reset_index(level=0)\
+                            .merge(weights.stack().to_frame('weights').reset_index(level=0, drop=True),
+                                  left_index=True,
+                                  right_index=True)\
+                            .reset_index().set_index(['Date', 'index']).unstack().stack()
+        ## fixing the index names
+        current_returns.index.names = ['date', 'ticker']
+        ## and then calculating the daily weighted return for each stock
+        current_returns['weighted_return'] = current_returns['weights']*current_returns['returns']
+        ## and sum all of the returns to get the total daily return
+        current_returns = current_returns.groupby(level=0)['weighted_return'].sum().to_frame('Strategy Return')
+        ## and the last step would be to concat the returns df to the portfolio
+        portfolio_df = pd.concat([portfolio_df, current_returns], axis = 0)
+    except Exception as e:
+        print(e)
+portfolio_df.drop_duplicates(inplace = True)
