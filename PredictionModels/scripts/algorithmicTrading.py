@@ -208,7 +208,8 @@ def plot_cluster(data):
 for i in clustered_data.index.get_level_values('date').unique().tolist():
     g = clustered_data.xs(i)
     plt.title(f'Date {i}')
-    plot_cluster(g)
+    ## uncomment if checking the graphs
+    # plot_cluster(g)
 ## if we look at the plots, 
 ## we will notice that the clusters are assigned randomly
 ## and we want to change that
@@ -234,7 +235,8 @@ clustered_data = monthly_data.dropna().groupby('date', group_keys = False).apply
 for i in clustered_data.index.get_level_values('date').unique().tolist():
     g = clustered_data.xs(i)
     plt.title(f'Date {i}')
-    plot_cluster(g)
+    ## uncomment if checking the grapghs
+    # plot_cluster(g)
 ## now we know if the stocks with high RSI are in cluster 3
 ## we want our porfolio to be stocks that are in that cluster
 ## for the previous perids
@@ -364,3 +366,18 @@ for start_date in stocks_dict:
     except Exception as e:
         print(e)
 portfolio_df.drop_duplicates(inplace = True)
+## now we want to compare our returns with SP500
+## we should download the SP500 stock
+spy = yf.download(tickers = 'SPY',
+                 start='2015-01-01',
+                 end=dt.date.today())
+spy_net = np.log(spy['Adj Close']).diff().to_frame().dropna().rename({'Adj Close':'SPY Buy&Hold'}, axis = 1)
+portfolio_df_w_spy = portfolio_df.merge(spy_net, left_index=True, right_index=True)
+## and calculate the cumulative return
+portfolio_cumulative_return = np.exp(np.log1p(portfolio_df_w_spy).cumsum())-1
+## and finally ploting the values
+plt.style.use('ggplot')
+portfolio_cumulative_return.plot(figsize=(20,10))
+plt.show()
+## which shows significantly better performance
+## for stategy developed here
