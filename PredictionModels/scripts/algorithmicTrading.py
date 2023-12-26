@@ -378,6 +378,7 @@ portfolio_cumulative_return = np.exp(np.log1p(portfolio_df_w_spy).cumsum())-1
 ## and finally ploting the values
 plt.style.use('ggplot')
 portfolio_cumulative_return.plot(figsize=(20,10))
+plt.title('Unsupervised Strategy Returns Over Time')
 plt.show()
 ## which shows significantly better performance
 ## for stategy developed here
