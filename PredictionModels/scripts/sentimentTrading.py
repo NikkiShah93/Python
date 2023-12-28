@@ -23,3 +23,18 @@ sentiment_data['engagement_ratio'] = sentiment_data['twitterComments'].div(senti
 ## then we want to filter out
 ## low likes/comments stocks
 sentiment_data = sentiment_data[(sentiment_data['twitterLikes'] > 20) & (sentiment_data['twitterComments']>5)]
+## now we want to get the monthly aggregate
+## and calculate the average sentiment for the month
+monthly_data = sentiment_data.unstack('symbol').resample('M')['engagement_ratio'].mean().stack('symbol').to_frame('engagement_ratio')
+## now we want to ranke the stocks based on this value
+monthly_data['rank'] = monthly_data.groupby(level=0)['engagement_ratio'].transform(lambda x:x.rank(ascending=False)) 
+## now we want to select the top 5 stocks based on this ranking
+monthly_data = monthly_data[monthly_data['rank'] <=5]
+monthly_data = monthly_data.reset_index(level=1)
+## because we want to use the data for the next month
+## we will add one day to the date
+monthly_data.index = monthly_data.index + pd.DateOffset(1)
+monthly_data = monthly_data.reset_index().set_index(['date','symbol'])
+## now we want to create a dictionary
+## with dates and the stocks that we're interested
+stocks_dict = {(x).strftime('%Y-%m-%d'):monthly_data.xs(x).index.get_level_values('symbol').unique().tolist() for x in monthly_data.index.get_level_values('date').unique().tolist()}
