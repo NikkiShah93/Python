@@ -38,3 +38,13 @@ monthly_data = monthly_data.reset_index().set_index(['date','symbol'])
 ## now we want to create a dictionary
 ## with dates and the stocks that we're interested
 stocks_dict = {(x).strftime('%Y-%m-%d'):monthly_data.xs(x).index.get_level_values('symbol').unique().tolist() for x in monthly_data.index.get_level_values('date').unique().tolist()}
+## and the next step would be to download the new prices
+## and we need to get the stock list for that
+stock_list = monthly_data.index.get_level_values('symbol').unique().tolist()
+## get two year of data
+start_date = dt.date.today() - pd.DateOffset(months=24)
+end_date = dt.date.today()
+stock_price = yf.download(tickers = stock_list, start = start_date, end = end_date)
+## lets calculate the portfolio return
+returns_df = np.log(stock_price['Adj Close']).diff().dropna()
+portfolio_df = pd.DataFrame()
