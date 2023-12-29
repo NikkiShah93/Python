@@ -67,3 +67,9 @@ qqq_returns = np.log(qqq_df['Adj Close']).diff().to_frame('qqq_returns').dropna(
 ## now we're ready to merge our portfolio return
 ## with the nasdaq one
 portfolio_df = portfolio_df.merge(qqq_returns, left_index = True, right_index = True)
+## the next step would be to visualize
+## first we want to get the cumsum of the returns
+portfolio_cumulative_returns = np.exp(np.log1p(portfolio_df).cumsum()).sub(1)
+portfolio_cumulative_returns.plot(figsize = (20,10))
+plt.title('Twitter Sentiment Portfolio vs NASDAQ')
+plt.ylabel('Return')
