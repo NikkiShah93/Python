@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import datetime
+import datetime as dt
 import yfinance as yf
 import os
 plt.style.use('ggplot')
@@ -48,3 +48,22 @@ stock_price = yf.download(tickers = stock_list, start = start_date, end = end_da
 ## lets calculate the portfolio return
 returns_df = np.log(stock_price['Adj Close']).diff().dropna()
 portfolio_df = pd.DataFrame()
+for day in stocks_dict:
+    end_date = (pd.to_datetime(day)+pd.offsets.MonthEnd()).strftime('%Y-%m-%d')
+    stocks_to_invest = stocks_dict[day]
+    ## we want to have equally weighted portfolio
+    temp_df = returns_df[day:end_date][stocks_to_invest].mean(axis=1).to_frame('portfolio_return')
+    ## and add it to the portfolio
+    portfolio_df = pd.concat([portfolio_df,temp_df], axis= 0)
+## now we're ready to visualize the returns
+## and compare it with NASDAQ/QQQ
+## so we need to download the data
+## for the same timeframe
+start_date = dt.date.today() - pd.DateOffset(months=24)
+end_date = dt.date.today()
+qqq_df = yf.download(tickers = 'QQQ', start = start_date, end = end_date)
+## and then calculate the NASDAQ returns
+qqq_returns = np.log(qqq_df['Adj Close']).diff().to_frame('qqq_returns').dropna()
+## now we're ready to merge our portfolio return
+## with the nasdaq one
+portfolio_df = portfolio_df.merge(qqq_returns, left_index = True, right_index = True)
