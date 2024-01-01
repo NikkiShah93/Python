@@ -45,7 +45,7 @@ intraday_5min_df['date'] = intraday_5min_df.index.date
 ## we need to test to find 
 ## what orders would work best 
 ## first, calculate the 6-month rolling variance
-daily_df['variance'] = daily_df['Adj Close'].rolling(180).var()
+daily_df['variance'] = daily_df['log_ret'].rolling(180).var()
 ## for simplicity
 ## we will only use 2020 forward
 daily_df = daily_df['2020-01-01':]
@@ -60,4 +60,20 @@ def predict_volatility(x):
     variance_forcast = garch_model.forecast(horizon=1).variance.iloc[-1,0]
     return variance_forcast
 ## now we want to get the predictions of the model
-daily_df['predictions'] = daily_df['Adj Close'].rolling(180).apply(lambda x : predict_volatility(x))
+daily_df['predictions'] = daily_df['log_ret'].rolling(180).apply(lambda x : predict_volatility(x))
+## now we want to calculate 
+## prediction premium
+## and form a signal from it
+## by calculating its 6-month
+## rolling standard deviation
+daily_df['prediction_premium'] = (daily_df['predictions']-daily_df['variance'])/daily_df['variance']
+daily_df['premium_std'] = daily_df['prediction_premium'].rolling(180).std()
+## and to get the daily signal
+daily_df['signal_daily'] = daily_df.apply(lambda x: 1 if (x['prediction_premium'] > x['premium_std'] *1.5)
+                                         else (-1 if  x['prediction_premium'] < x['premium_std'] *-1.5
+                                              else np.nan), axis=1)
+## we can plot a histogram
+## to see how many long (1) signals
+## and how many short (-1) signals 
+## we have in the set
+daily_df['signal_daily'].plot(kind = 'hist')
