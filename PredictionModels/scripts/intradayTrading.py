@@ -9,3 +9,12 @@
 ## Merge with intraday data and calculate intraday indicators to form the intraday signal
 ## Generate the position entry and hold until the end of day
 ## Finally, calculate the final strategy returns
+## first the imports
+import matplotlib
+from arch import arch_model
+from tqdm import tqdm
+import pandas as pd
+import numpy as np
+## then load the simulated daily and 5-min data
+min_data_path = '../data/simulated_5min_data.csv'
+daily_data_path = '../data/simulated_daily_data.csv'
