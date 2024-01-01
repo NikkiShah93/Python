@@ -90,3 +90,17 @@ final_df = intraday_5min_df.reset_index().merge(daily_df[['signal_daily']].reset
                                     left_on = 'date',
                                     right_on = 'Date').set_index('datetime')
 final_df.drop(['date', 'Date'], axis = 1, inplace = True)
+## now we're ready to calculate the indicators
+## usig the pandas_ta
+final_df['rsi'] = pandas_ta.rsi(close = final_df['close'], length = 20)
+## lower bound
+final_df['lband'] = pandas_ta.bbands(close=final_df['close'], length = 20).iloc[:,0]
+## upper bound
+final_df['uband'] = pandas_ta.bbands(close = final_df['close'], length = 20).iloc[:,2]
+## now we're ready to calculate intraday signal
+## which we will define as
+## rsi > 70 and and close > uband
+final_df['signal_intraday'] = final_df.apply(lambda x: 1 if (x['rsi'] > 70 and x['close'] > x['uband'])
+                                            else (-1 if (x['rsi'] < 30 and x['close'] < x['lband']) 
+                                                 else np.nan),
+                                             axis = 1)
