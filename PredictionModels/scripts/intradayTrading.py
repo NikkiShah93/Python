@@ -10,9 +10,9 @@
 ## Generate the position entry and hold until the end of day
 ## Finally, calculate the final strategy returns
 ## first the imports
-import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 from arch import arch_model
-from tqdm import tqdm
 import pandas as pd
 import pandas_ta
 import numpy as np
@@ -104,3 +104,28 @@ final_df['signal_intraday'] = final_df.apply(lambda x: 1 if (x['rsi'] > 70 and x
                                             else (-1 if (x['rsi'] < 30 and x['close'] < x['lband']) 
                                                  else np.nan),
                                              axis = 1)
+## now we're ready to generate the position entry
+## and hold until the end of the day
+## the strategy is to short
+## when both daily and intraday signals 
+## are 1, and long when both are -1
+final_df['return_sign'] = final_df.apply(lambda x: -1 if (x['signal_daily'] == 1 and x['signal_intraday'] == 1)
+                                                        else (1 if (x['signal_daily'] == -1 and x['signal_intraday'] == -1)
+                                                                 else np.nan),
+                                        axis = 1)
+## we will go into the position
+## in the first signal of the day
+## and hold for the entire day
+## and we can have the first signal
+## filling the rest of the day
+final_df['return'] = final_df.groupby(pd.Grouper(freq='D'))['return_sign'].transform(lambda x : x.ffill())
+final_df['forward_return'] = final_df['return'].shift(-1)
+final_df['strategy_return'] = final_df['forward_return']*final_df['return_sign']
+## and finally, we can calculate the daily return
+daily_return_df = final_df.groupby(pd.Grouper(freq='D'))['strategy_return'].sum()
+strategy_cumulative_return = np.exp(np.log1p(daily_return_df).cumsum()).sub(1)
+## and plotting the strategy return
+strategy_cumulative_return.plot(figsize = (20,10))
+plt.title('Intraday Strategy Return')
+plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter(1))
+plt.ylabel('Return')
