@@ -14,6 +14,7 @@ import matplotlib
 from arch import arch_model
 from tqdm import tqdm
 import pandas as pd
+import pandas_ta
 import numpy as np
 ## then load the simulated daily and 5-min data
 min_data_path = '../data/simulated_5min_data.csv'
@@ -31,7 +32,7 @@ intraday_5min_df = pd.read_csv(min_data_path)
 intraday_5min_df['datetime'] = pd.to_datetime(intraday_5min_df['datetime'])
 intraday_5min_df.drop('Unnamed: 6', axis= 1, inplace = True)
 intraday_5min_df = intraday_5min_df.set_index('datetime')
-intraday_5min_df['date'] = intraday_5min_df.index.date
+intraday_5min_df['date'] = pd.to_datetime(intraday_5min_df.index.date)
 ## now we want to define a func 
 ## to fit the GARCH model 
 ## and predict 1-day ahead volatility 
@@ -77,3 +78,15 @@ daily_df['signal_daily'] = daily_df.apply(lambda x: 1 if (x['prediction_premium'
 ## and how many short (-1) signals 
 ## we have in the set
 daily_df['signal_daily'].plot(kind = 'hist')
+## we will be using the current day signal
+## to predict the next day's values
+## so we need to shift the signal by one
+daily_df['signal_daily'] = daily_df['signal_daily'].shift(1)
+## next, we want to merge the new df
+## with the intraday df
+## and calculate the intraday indicators
+## to form the intraday signals
+final_df = intraday_5min_df.reset_index().merge(daily_df[['signal_daily']].reset_index(),
+                                    left_on = 'date',
+                                    right_on = 'Date').set_index('datetime')
+final_df.drop(['date', 'Date'], axis = 1, inplace = True)
