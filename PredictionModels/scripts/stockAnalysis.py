@@ -109,3 +109,16 @@ def add_Ichimoku(df):
     df['leading_span_b'] = ((df['High'].rolling(52).max() + df['Low'].rolling(52).min())/2).shift(26)
     df['lagging_span'] = (df['Close'].shift(-26)) 
     return df
+## now adding the indicators to our data
+stock_data_w_ind_path =  f"{data_path}/stock_data_w_indicators"
+for t in tickers:
+    try:
+        print(f"working on:{t}")
+        new_df = get_stock_df_from_csv(folder = stock_data_path, ticker = t)
+        new_df = add_daily_return(new_df)
+        new_df = add_cum_return(new_df)
+        new_df = add_bollinger_bands(new_df)
+        new_df = add_Ichimoku(new_df)
+        new_df.to_csv(f"{stock_data_path}/{t}.csv", index = False)
+    except Exception as e:
+        print('No file was found!')
