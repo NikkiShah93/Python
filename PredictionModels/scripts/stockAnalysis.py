@@ -64,7 +64,7 @@ def get_stock_df_from_csv(folder, ticker):
     else:
         return df
 ## only getting the stocks that have been downloaded
-files = [f for f in os.listdir(stock_data_path) if f.endswith('.csv') and os.isfile(join(stock_data_path, f))]
+files = [f for f in os.listdir(stock_data_path) if f.endswith('.csv')]
 tickers = [os.path.splitext(x)[0] for x in files if os.path.splitext(x)[0]!= '.ds_Store']
 ## we're only interested in returns
 def add_daily_return(df):
@@ -75,4 +75,37 @@ def add_daily_return(df):
 def add_cum_return(df):
     df['cum_return'] = (1 + df['daily_return']).cumprod()
     ## or np.exp(np.log1p(df['daily_return']).cumsum()).sub(1)
+    return df 
+## now adding the Bollinger Bands
+## BB plot 2 lines using a moving average 
+## and the standard deviation defines how apart
+## the lines will be
+def add_bollinger_bands(df, window = 20):
+    df['middle_band'] = df['Close'].rolling(window = window).mean()
+    df['upper_band'] = df['middle_band'] + 1.96 * df['Close'].rolling(window=window).std()
+    df['lower_band'] = df['middle_band'] + 1.96 * df['Close'].rolling(window=window).std()
+    return df
+## now the Ichimoku
+## which is considered an all in one indicator
+## and provides information on momentum
+## and is made up of 5 lines
+## Conversion Line - represent support, resistance and reversals
+## Baseline - represent support, resistance and confirms trend changes
+## Leading Span A - used to identify future areas of support and resistance
+## Leading Span B - used to identify future areas of support and resistance
+## Lagging Span - shows possible support and resistance
+## Cloud - space between Span A & B, represents the divergence in price evolution
+
+## Formulas
+## Lagging Span = price shifted back 26 periods
+## Baseline = (Highest Value in Period / Lowest Value in Period)/2 (26 sessions)
+## Conversion Line = (Highest Value in Period / Lowest Value in Period)/2 (9 sessions)
+## Leading Span A = (Conversion Value + Base Value)/2 (26 sessions)
+## Leading Span B = (Conversion Value + Base Value)/2 (52 sessions)
+def add_Ichimoku(df):
+    df['conversion_line'] = (df['High'].rolling(9).max() / df['Low'].rolling(9).min())/2
+    df['baseline'] = (df['High'].rolling(26).max() / df['Low'].rolling(26).min())/2
+    df['leading_span_a'] = (df['conversion_line'] + df['baseline'])/2
+    df['leading_span_b'] = ((df['High'].rolling(52).max() + df['Low'].rolling(52).min())/2).shift(26)
+    df['lagging_span'] = (df['Close'].shift(-26)) 
     return df
