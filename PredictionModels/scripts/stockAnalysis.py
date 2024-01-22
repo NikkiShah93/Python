@@ -122,3 +122,35 @@ for t in tickers:
         new_df.to_csv(f"{stock_data_path}/{t}.csv", index = False)
     except Exception as e:
         print('No file was found!')
+## for plotting candlesticks
+def plot_with_boll_bands(df, ticker):
+    fig = go.figure()
+    candle = go.Candlestick(x = df.index,
+                            open = df['Open'], high = df['High'], 
+                            low = df['Low'], close = df['Close'], 
+                            name = "Candlestick")
+    ## the line = is for styling
+    upper_line = go.Scatter(x = df.index, y = df['upper_band'], 
+                            line = dict(color='rgba(250, 0, 0,0.75)', 
+                                        width=1), 
+                            name = "Upper Band")
+    mid_line = go.Scatter(x = df.index, y = df['middle_band'], 
+                            line = dict(color='rgba(0, 0, 250,0.75)', 
+                                        width=1), 
+                            name = "Middle Band")
+    lower_line = go.Scatter(x = df.index, y = df['lower_band'], 
+                            line = dict(color='rgba(0, 250, 0,0.75)', 
+                                        width=0.7), 
+                            name = "Lower Band")
+    ## to add the plot to the screen
+    fig.add_trace(candle)
+    fig.add_trace(upper_line)
+    fig.add_trace(mid_line)
+    fig.add_trace(lower_line)
+    ## then we have to change some things
+    ## and add the cabability to zoon in and out with rangeslider
+    fig.update_xaxes(title = "Date", rangeslider_visible = True)
+    fig.update_yaxes(title = "Price", rangeslider_visible = True)
+    fig.update_layout(title = f"{ticker} Bollinger Bands", height = 1200, 
+                      width = 1800, showlegend=True)
+    fig.show()
