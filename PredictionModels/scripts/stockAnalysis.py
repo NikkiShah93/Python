@@ -103,9 +103,9 @@ def add_bollinger_bands(df, window = 20):
 ## Leading Span A = (Conversion Value + Base Value)/2 (26 sessions)
 ## Leading Span B = (Conversion Value + Base Value)/2 (52 sessions)
 def add_Ichimoku(df):
-    df['conversion_line'] = (df['High'].rolling(9).max() / df['Low'].rolling(9).min())/2
-    df['baseline'] = (df['High'].rolling(26).max() / df['Low'].rolling(26).min())/2
-    df['leading_span_a'] = (df['conversion_line'] + df['baseline'])/2
+    df['conversion_line'] = (df['High'].rolling(9).max() + df['Low'].rolling(9).min())/2
+    df['baseline'] = (df['High'].rolling(26).max() + df['Low'].rolling(26).min())/2
+    df['leading_span_a'] = ((df['conversion_line'] + df['baseline'])/2).shift(26)
     df['leading_span_b'] = ((df['High'].rolling(52).max() + df['Low'].rolling(52).min())/2).shift(26)
     df['lagging_span'] = (df['Close'].shift(-26)) 
     return df
@@ -119,7 +119,7 @@ for t in tickers:
         new_df = add_cum_return(new_df)
         new_df = add_bollinger_bands(new_df)
         new_df = add_Ichimoku(new_df)
-        new_df.to_csv(f"{stock_data_path}/{t}.csv", index = False)
+        new_df.to_csv(f"{stock_data_path}/{t}.csv")
     except Exception as e:
         print('No file was found!')
 ## for plotting candlesticks
