@@ -3,6 +3,7 @@
 
 ## first the imports
 import matplotlib.pyplot as plt
+from matplotlib import style
 import numpy as np
 
 ## we will use numpy for generating data
@@ -61,13 +62,71 @@ heights = np.random.normal(68, 5, 500)
 price_ticks = list(range(int(price.min()) - 50, int(price.max()) + 50, 500))
 price_2 = (np.sin(years/2)*np.cos(years)/np.pi) * 1000 + 2500
 price_3 = (np.sin(years/3)*np.cos(years)/np.pi) * 1000 + 2000
-plt.plot(years, price, label='California')
-plt.plot(years, price_2, label = 'Texas')
-plt.plot(years, price_3, label= 'New York')
-plt.title('Housing Prices', fontsize = 20, fontname = 'Georgia')
-plt.ylabel(r'Average Prices ($ \$k $)')
-plt.xlabel('Year')
-plt.yticks(price_ticks, [f'${round(x)}k' for x in price_ticks])
-plt.legend()
-plt.show()
+# plt.plot(years, price, label='California')
+# plt.plot(years, price_2, label = 'Texas')
+# plt.plot(years, price_3, label= 'New York')
+# plt.title('Housing Prices', fontsize = 20, fontname = 'Georgia')
+# plt.ylabel(r'Average Prices ($ \$k $)')
+# plt.xlabel('Year')
+# plt.yticks(price_ticks, [f'${round(x)}k' for x in price_ticks])
+# plt.legend()
+# plt.show()
 
+## a bit more styling using the style module
+style.use('ggplot')
+
+## moving to multiple figures
+## using the prices that we generated
+# plt.figure(1)
+# plt.plot(years, price)
+
+# plt.figure(2)
+# plt.plot(years, price_2)
+
+# plt.show()
+
+## better way of showing multiple charts
+## is to make a subplot
+## some random data
+x = np.linspace(-2, 2, 1000)
+y = np.sin(x)
+y1 = np.cos(x)
+## 1 row and 2 columns
+# fig, ax = plt.subplots(1, 2)
+# ## and then adding the plots
+# ## to each specific coordinate
+# ax[0].plot(x, y)
+# ax[0].set_title(r'$\sin(x)$')
+
+# ax[1].plot(x, y1)
+# ax[1].set_title(r'$\cos(x)$')
+
+# ## we can also interact
+# ## w the entire figure
+# fig.suptitle(r'$\sin(x)$ and $\cos(x)$', fontsize = 25, fontname='Calibri')
+# plt.tight_layout()
+
+# plt.show()
+
+## we can also save the plot
+# plt.savefig('sincos.png', dpi=300, transparent=True)
+
+## more advanced types of plots and animation
+## starting with 3d plotting
+
+x = np.linspace(-10, 10, 1000)
+y = np.linspace(-5, 5, 1000)
+
+## creating a meshgrid so z wouldn't be in 1d
+xg, yg = np.meshgrid(x, y)
+
+z = np.sin(xg)/2*np.pi + 2 * np.cos(yg)/2
+
+ax = plt.axes(projection='3d') 
+ax.plot_surface(xg, yg, z, cmap='plasma')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+## we can also set an initial state
+ax.view_init(azim=90, elev=0)
+plt.show()
