@@ -122,11 +122,25 @@ xg, yg = np.meshgrid(x, y)
 
 z = np.sin(xg)/2*np.pi + 2 * np.cos(yg)/2
 
-ax = plt.axes(projection='3d') 
-ax.plot_surface(xg, yg, z, cmap='plasma')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-## we can also set an initial state
-ax.view_init(azim=90, elev=0)
+# ax = plt.axes(projection='3d') 
+# ax.plot_surface(xg, yg, z, cmap='plasma')
+# ax.set_xlabel('X')
+# ax.set_ylabel('Y')
+# ax.set_zlabel('Z')
+# ## we can also set an initial state
+# ax.view_init(azim=90, elev=0)
+# plt.show()
+
+## moving to animation
+
+## animating the coin flips
+flips = {'Heads':0, 'Tails':0}
+for _ in range(500):
+    if np.random.randint(0,2,1)==0:
+        flips['Heads'] += 1
+    else:
+        flips['Tails'] +=1
+    plt.bar(list(flips.keys()), list(flips.values()), color = ['red', 'green'])
+    ## pause is what makes it an animated chart
+    plt.pause(0.001)
 plt.show()
