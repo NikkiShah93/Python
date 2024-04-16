@@ -85,9 +85,32 @@ class KMeansClustering:
             ## based on the new list
             ## and we can check to see if the change
             ## is less than a certain threshhold
-            if np.max(self.centroids, np.array(cluster_centroids)) < 0.001:
+            if np.max(self.centroids - np.array(cluster_centroids)) < 0.001:
                 break
             else:
                 self.centroids = np.array(cluster_centroids)
         ## and then finally, return the clusters/labels
         return y
+
+## now let's test our class with some random data
+x = np.random.randint(low=0, high=500, size = (300, 3))
+kmmodel = KMeansClustering(k=4)
+y = kmmodel.fit(x, max_iteration=50)
+## the labels for each data point
+print(y)
+## and the calculated centroids
+print(kmmodel.centroids)
+## and then plot the result
+fig = plt.figure(figsize=(10,5))
+ax = fig.add_axes([.1,.1,.9,.9], projection='3d')
+## and for the color of each cluster
+## we will use the returned labels 
+ax.scatter(x[:,0], x[:,1], x[:, 2], c=y)
+## and showing the cluster centroids of the current model
+ax.scatter(kmmodel.centroids[:,0], kmmodel.centroids[:,1], kmmodel.centroids[:,2], 
+           c=range(kmmodel.centroids.shape[0]), marker='*', s=100)
+ax.set_title('K-Means Clustering Result')
+ax.set_xlabel(r'$x$')
+ax.set_ylabel(r'$y$')
+ax.set_zlabel(r'$z$')
+plt.show()
