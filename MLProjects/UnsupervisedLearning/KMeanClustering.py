@@ -37,8 +37,8 @@ class KMeansClustering:
     ## we also need a static method
     ## to calculate the euclidean distance
     @staticmethod
-    def euclidean_distance(data_point, centroid):
-        return np.sqrt(np.sum((centroid - data_point)**2, axis=1))
+    def euclidean_distance(data_point, centroids):
+        return np.sqrt(np.sum((centroids - data_point)**2, axis=1))
     ## the next thing is to initiate
     ## the centroids, using the data
     def fit(self, X, max_iteration=100):
@@ -60,3 +60,34 @@ class KMeansClustering:
                 y.append(np.argmin(distance))
             y = np.array(y)
 
+            ## now we need to re-center our centroids
+            ## using the calculated distances
+            cluster_indices = []
+            for i in range(self.k):
+                ## we need the index
+                ## of the points that belong
+                ## to the current cluster
+                cluster_indices.append(np.argwhere(y == i))
+            ## and then we need to re-evaluate the centroids
+            cluster_centroids = []
+            for i, val in enumerate(cluster_indices):
+                ## when we don't have any points
+                ## belonging to that cluster
+                ## we will just use the same center
+                if len(val) == 0:
+                    cluster_centroids.append(self.centroids[i])
+                else:
+                    ## otherwise, we want the average
+                    ## of all the data points that were assigned
+                    ## to that specific cluster
+                    cluster_centroids.append(np.mean(X[val], axis=0)[0])
+            ## and then creating the new centroids
+            ## based on the new list
+            ## and we can check to see if the change
+            ## is less than a certain threshhold
+            if np.max(self.centroids, np.array(cluster_centroids)) < 0.001:
+                break
+            else:
+                self.centroids = np.array(cluster_centroids)
+        ## and then finally, return the clusters/labels
+        return y
