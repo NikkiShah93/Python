@@ -26,3 +26,37 @@
 ## first the imports
 import numpy as np
 import matplotlib.pyplot as plt
+
+## we will create a class for our k-mean cluster
+class KMeansClustering:
+    ## and the only param that we initially need
+    ## is the number of clusters ie. k
+    def __init__(self, k=3):
+        self.k = k
+        self.centroids = None
+    ## we also need a static method
+    ## to calculate the euclidean distance
+    @staticmethod
+    def euclidean_distance(data_point, centroid):
+        return np.sqrt(np.sum((centroid - data_point)**2, axis=1))
+    ## the next thing is to initiate
+    ## the centroids, using the data
+    def fit(self, X, max_iteration=100):
+        ## we want to pick the initial 
+        ## centroids based on the min and max
+        ## values of each feature
+        self.centroids = np.random.uniform(low = np.amin(X, axis=0), high=np.amax(X, axis=0), 
+                                           size = (self.k, X.shape[1]))
+        ## the next step is to calculate the distance
+        ## between each data point and the centroids
+        for _ in range(max_iteration):
+            ## we need a list to keep track 
+            ## of the assigned clusters 
+            y = []
+            for data_point in X:
+                distance = KMeansClustering.euclidean_distance(data_point, self.centroids)
+                ## and we will append the index
+                ## of the closest centroid to the data poin
+                y.append(np.argmin(distance))
+            y = np.array(y)
+
